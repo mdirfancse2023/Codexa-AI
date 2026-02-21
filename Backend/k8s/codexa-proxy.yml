@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codexa-proxy
+  namespace: codexa-ai
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codexa-proxy
+  template:
+    metadata:
+      labels:
+        app: codexa-proxy
+    spec:
+      containers:
+        - name: proxy
+          image: codexa-proxy:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+          env:
+            - name: REDIS_URL
+              value: "redis://redis-service:6379"
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: codexa-proxy-svc
+  namespace: codexa-ai
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: codexa-proxy

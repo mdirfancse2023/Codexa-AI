@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-project-pods
+  namespace: codexa-ai
+spec:
+    podSelector:
+        matchLabels:
+            status: busy # Only apply to busy runner pods
+    policyTypes:
+        - Ingress
+        - Egress
+
+    #INGRESS - who can talk to runner
+    ingress:
+        - from:
+            - podSelector:
+                matchLabels:
+                    app: codexa-proxy # Only allow traffic from proxy
+          ports:
+            - protocol: TCP
+              port: 5173 # Allow traffic to runner container port
+
+    #EGRESS - who can the Runner talk to
+    egress:
+        - to:
+            - ipBlock:
+                cidr: 0.0.0.0/0 # Allow egress to anywhere (for external APIs, package registries, etc.)

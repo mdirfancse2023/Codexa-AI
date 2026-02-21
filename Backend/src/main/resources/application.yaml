@@ -1,0 +1,85 @@
+spring:
+  mvc:
+    async:
+      request-timeout: 600000  # 10 minutes
+
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration
+      #- org.springframework.ai.model.ollama.autoconfigure.OllamaChatAutoConfiguration
+
+  application:
+    name: CodexaAI
+    description: An application for creating app.
+
+  datasource:
+    url: jdbc:postgresql://localhost:9002/pgvector-test
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6380
+
+  ai:
+    openai:
+        api-key: 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
+        base-url: https://openrouter.ai/api
+        chat:
+          options:
+            model:  google/gemini-3-flash-preview #x-ai/grok-code-fast-1 #google/gemini-2.5-flash  #openai/gpt-5.2-codex #qwen/qwen3-coder:free
+            temperature: 0.0 #0.0 for deterministic output, higher values for more creativity
+    ollama:
+       base-url: http://localhost:11434
+       chat:
+         options:
+           model: deepseek-coder:6.7b #qwen3:8b
+           temperature: 0.0
+
+
+
+jwt:
+  secret: Q9xA2fM7KpZ4Yt3LrW8B0S1N6HVaEeCJD8zP4TUm
+  expiration: 3600 # in seconds
+
+stripe:
+  api:
+    secret: sk_test_51SltV4P1hPMwbn4lE4vG5n7eJiS12AkvQQmQow0VfixlTZ0FF13X63US20YMGHoms7M0CH69J65F6QOJIYB4OYfs005emSqrem
+  webhook:
+    secret: whsec_bafbaac88849d767f21645ddc69863b9e129f8cf735249bb1fe4bc4bf48b1a50
+  #stripe listen --forward-to localhost:8080/webhooks/payment
+  #stripe login
+
+client:
+  url: http://localhost:8080
+
+logging:
+  level:
+    org.springframework.ai:
+        chat.client: DEBUG
+
+minio:
+  url: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin123
+  project-bucket: projects
+
+app:
+  frontend:
+    url: http://localhost:5173
+
+server:
+  tomcat:
+    connection-timeout: 600000
+
