@@ -44,7 +44,7 @@ spring:
        base-url: http://localhost:11434
        chat:
          options:
-           model: deepseek-coder:6.7b #qwen3:8b
+           model: deepseek-v3.1:671b-cloud #qwen3-coder:480b-cloud #qwen3.5:cloud #qwen3:8b
            temperature: 0.0
 
 
