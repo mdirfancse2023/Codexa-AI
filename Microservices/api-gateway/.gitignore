@@ -1,25 +1,52 @@
+# ===============================
+# Spring Boot / Maven
+# ===============================
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# ===============================
+# Maven Wrapper
+# ===============================
+.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# ===============================
+# Logs
+# ===============================
+*.log
+
+# ===============================
+# OS Files
+# ===============================
+.DS_Store
+Thumbs.db
+
+# ===============================
+# STS (Spring Tool Suite)
+# ===============================
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# ===============================
+# IntelliJ IDEA
+# ===============================
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
-### NetBeans ###
+# ===============================
+# NetBeans
+# ===============================
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +56,21 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# ===============================
+# VS Code
+# ===============================
 .vscode/
+
+# ===============================
+# Node (if React frontend exists)
+# ===============================
+node_modules/
+dist/
+build/
+
+# ===============================
+# Environment files
+# ===============================
+.env
+.env.local
+.env.*
