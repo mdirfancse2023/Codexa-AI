@@ -92,7 +92,7 @@ export function LoginModal() {
                     setEmail(e.target.value);
                     if (formError) setFormError(null);
                   }}
-                  className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl md:text-sm"
+                  className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl"
                   disabled={isLoading}
                 />
               </div>
@@ -113,7 +113,7 @@ export function LoginModal() {
                     setPassword(e.target.value);
                     if (formError) setFormError(null);
                   }}
-                  className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl md:text-sm"
+                  className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl"
                   disabled={isLoading}
                 />
               </div>

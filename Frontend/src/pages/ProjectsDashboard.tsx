@@ -238,10 +238,10 @@ export function ProjectsDashboard() {
             <div className="min-h-screen bg-background">
                 {/* Header */}
                 <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="container flex min-h-14 max-w-screen-2xl items-center justify-between gap-2 px-4 py-3 sm:h-14 sm:px-8 sm:py-0">
-                        <div className="flex min-w-0 items-center gap-2 text-sm font-bold sm:text-lg">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-                                <Folder className="h-[18px] w-[18px] text-primary sm:h-5 sm:w-5" />
+                    <div className="container flex min-h-14 max-w-screen-2xl items-center justify-between gap-1.5 px-3 py-3 sm:h-14 sm:gap-2 sm:px-8 sm:py-0">
+                        <div className="flex min-w-0 items-center gap-1.5 text-xs font-bold sm:gap-2 sm:text-lg">
+                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/20 sm:h-8 sm:w-8">
+                                <Folder className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
                             </div>
                             <span className="truncate whitespace-nowrap">Codexa AI</span>
                         </div>
@@ -252,7 +252,7 @@ export function ProjectsDashboard() {
                                     <button
                                         type="button"
                                         disabled={isOpeningPortal}
-                                        className="inline-flex h-8 items-center rounded-md border border-primary bg-primary px-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-primary-foreground shadow-sm disabled:opacity-70"
+                                        className="inline-flex h-7 items-center rounded-md border border-primary bg-primary px-2 text-[10px] font-bold uppercase tracking-[0.04em] text-primary-foreground shadow-sm disabled:opacity-70 sm:h-8 sm:px-2.5 sm:text-[11px] sm:tracking-[0.12em]"
                                     >
                                         {isOpeningPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : currentPlanName}
                                     </button>
@@ -348,8 +348,8 @@ export function ProjectsDashboard() {
                             </Popover>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                                        <Avatar className="h-9 w-9">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full sm:h-9 sm:w-9">
+                                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                                 {(() => {
                                                     const userInfo = getUserInfo();
