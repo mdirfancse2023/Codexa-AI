@@ -547,37 +547,39 @@ Please analyze this error and fix the code to resolve it.`;
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="shrink-0 border-b border-border/50 bg-panel px-3 py-2">
+      <header className="shrink-0 overflow-x-hidden border-b border-border/50 bg-panel px-3 py-2">
         <div className={cn(
-          "flex min-w-0 gap-3",
+          "flex min-w-0 gap-3 overflow-x-hidden",
           isMobile ? "flex-col" : "items-center overflow-x-auto whitespace-nowrap"
         )}>
-          <div className="flex min-w-0 items-center gap-2">
-            {project ? (
-              <>
-                {(() => {
-                  const iconKey = getProjectIcon(project.name);
-                  const Icon = iconComponents[iconKey] || Folder;
-                  return (
-                    <div className="w-7 h-7 rounded-sm shadow-sm bg-background/80 border border-border/60 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-foreground" />
-                    </div>
-                  );
-                })()}
-                <span className={cn("truncate font-semibold text-sm", isMobile && "max-w-[92px]")}>{project.name}</span>
-              </>
-            ) : (
-              <>
-                <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                </div>
-                <span className="font-semibold text-sm">Loading...</span>
-              </>
-            )}
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+              {project ? (
+                <>
+                  {(() => {
+                    const iconKey = getProjectIcon(project.name);
+                    const Icon = iconComponents[iconKey] || Folder;
+                    return (
+                      <div className="w-7 h-7 rounded-sm shadow-sm bg-background/80 border border-border/60 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4 text-foreground" />
+                      </div>
+                    );
+                  })()}
+                  <span className={cn("truncate font-semibold text-sm", isMobile && "max-w-[88px]")}>{project.name}</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="truncate font-semibold text-sm">Loading...</span>
+                </>
+              )}
+            </div>
             {project?.role !== 'VIEWER' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -598,7 +600,7 @@ Please analyze this error and fix the code to resolve it.`;
               </DropdownMenu>
             )}
             {isMobile && (
-              <div className="ml-1 flex items-center rounded-lg bg-muted/30 p-0.5">
+              <div className="ml-1 flex shrink-0 items-center rounded-lg bg-muted/30 p-0.5">
                 <button
                   onClick={() => setMobilePanelMode("workspace")}
                   className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all rounded-md ${mobilePanelMode === "workspace"
@@ -629,8 +631,8 @@ Please analyze this error and fix the code to resolve it.`;
               </div>
             )}
             <div className={cn(
-              "flex items-center rounded-lg bg-muted/30 p-0.5",
-              isMobile ? "ml-auto" : "ml-[22rem]"
+              "flex shrink-0 items-center rounded-lg bg-muted/30 p-0.5",
+              isMobile ? "ml-0" : "ml-[22rem]"
             )}>
               <button
                 onClick={() => setViewMode("preview")}
