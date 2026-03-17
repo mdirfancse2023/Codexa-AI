@@ -238,28 +238,30 @@ export function ProjectsDashboard() {
             <div className="min-h-screen bg-background">
                 {/* Header */}
                 <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="container grid min-h-14 max-w-screen-2xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:flex sm:gap-2 sm:px-8 sm:py-0">
-                        <div className="flex min-w-0 items-center gap-1.5 text-xs font-bold sm:gap-2 sm:text-lg">
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/20 sm:h-8 sm:w-8">
-                                <Folder className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
+                    <div className="container flex min-h-14 w-full max-w-screen-2xl items-center justify-between gap-2 px-3 py-3 sm:gap-3 sm:px-8 sm:py-0">
+                        <div className="flex min-w-0 items-center gap-2 text-sm font-bold sm:gap-2 sm:text-lg">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20 sm:h-8 sm:w-8">
+                                <Folder className="h-[18px] w-[18px] text-primary sm:h-5 sm:w-5" />
                             </div>
                             <span className="truncate whitespace-nowrap leading-none">Codexa AI</span>
                         </div>
-                        <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
-                            <div className="hidden sm:block">
-                                <ThemeToggle />
-                            </div>
+                        <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
+                            <ThemeToggle />
                             <Popover open={isPlanPopoverOpen} onOpenChange={setIsPlanPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <button
                                         type="button"
                                         disabled={isOpeningPortal}
-                                        className="inline-flex h-7 items-center rounded-md border border-primary bg-primary px-1.5 text-[10px] font-bold uppercase tracking-normal text-primary-foreground shadow-sm disabled:opacity-70 sm:h-8 sm:px-2.5 sm:text-[11px] sm:tracking-[0.12em]"
+                                        className="inline-flex h-8 items-center rounded-md border border-primary bg-primary px-2 text-xs font-bold uppercase tracking-normal text-primary-foreground shadow-sm disabled:opacity-70 sm:h-8 sm:px-2.5 sm:text-[11px] sm:tracking-[0.12em]"
                                     >
                                         {isOpeningPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : currentPlanName}
                                     </button>
                                 </PopoverTrigger>
-                                <PopoverContent align="end" side="bottom" className="w-[360px] p-3">
+                                <PopoverContent
+                                    align="end"
+                                    side="bottom"
+                                    className="w-[min(360px,calc(100vw-1.5rem))] p-3"
+                                >
                                     <div className="mb-3">
                                         <div className="text-sm font-semibold">{currentPlanName}</div>
                                         <div className="text-xs text-muted-foreground">
@@ -350,8 +352,8 @@ export function ProjectsDashboard() {
                             </Popover>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full p-0 sm:h-9 sm:w-9">
-                                        <Avatar className="h-7 w-7 sm:h-9 sm:w-9">
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full p-0 sm:h-9 sm:w-9">
+                                        <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                                             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                                 {(() => {
                                                     const userInfo = getUserInfo();
@@ -383,7 +385,7 @@ export function ProjectsDashboard() {
                     </div>
                 </header>
 
-                <main className="container max-w-screen-2xl px-4 py-6 sm:px-8 sm:py-8">
+                <main className="container max-w-screen-2xl px-3 py-5 sm:px-8 sm:py-8">
                     <div className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
                         <div className="space-y-1">
                             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Projects</h1>
@@ -394,12 +396,12 @@ export function ProjectsDashboard() {
 
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="gap-2">
+                            <Button className="w-full gap-2 sm:w-auto">
                                 <Plus className="w-4 h-4" />
                                 New Project
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>Create New Project</DialogTitle>
                                 <DialogDescription>
@@ -428,7 +430,7 @@ export function ProjectsDashboard() {
 
                     {/* Rename Dialog */}
                     <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
-                        <DialogContent>
+                        <DialogContent className="w-[calc(100vw-1.5rem)] max-w-lg">
                             <DialogHeader>
                                 <DialogTitle>Rename Project</DialogTitle>
                             </DialogHeader>
@@ -450,7 +452,7 @@ export function ProjectsDashboard() {
                 </div>
 
                 {/* Search */}
-                <div className="relative mb-6 max-w-md sm:mb-8">
+                <div className="relative mb-6 w-full max-w-md sm:mb-8">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search projects..."
@@ -466,7 +468,7 @@ export function ProjectsDashboard() {
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
                 ) : filteredProjects.length === 0 ? (
-                    <div className="text-center py-20 border border-dashed rounded-lg">
+                    <div className="rounded-lg border border-dashed py-16 text-center sm:py-20">
                         <h3 className="text-lg font-semibold mb-2">No projects found</h3>
                         <p className="text-muted-foreground mb-6">
                             {searchQuery ? "Try a different search query" : "Create your first project to get started"}
