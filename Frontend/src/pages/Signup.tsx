@@ -91,7 +91,7 @@ export default function Signup() {
                                         setName(e.target.value);
                                         if (formError) setFormError(null);
                                     }}
-                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
+                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl md:text-sm"
                                     disabled={isLoading}
                                 />
                             </div>
@@ -112,7 +112,7 @@ export default function Signup() {
                                         setEmail(e.target.value);
                                         if (formError) setFormError(null);
                                     }}
-                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
+                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl md:text-sm"
                                     disabled={isLoading}
                                 />
                             </div>
@@ -133,7 +133,7 @@ export default function Signup() {
                                         setPassword(e.target.value);
                                         if (formError) setFormError(null);
                                     }}
-                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
+                                    className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl md:text-sm"
                                     disabled={isLoading}
                                 />
                             </div>
