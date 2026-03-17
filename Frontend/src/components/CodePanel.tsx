@@ -3,11 +3,13 @@ import { FileTree } from "./FileTree";
 import { CodeEditor } from "./CodeEditor";
 import { FileTabs } from "./FileTabs";
 import { api, FileNode, OPEN_TABS_KEY, ACTIVE_TAB_KEY } from "@/lib/api";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CodePanelProps {
   projectId: string;
   updatedFiles: Map<string, string>;
   refreshToken?: number;
+  mobilePanelMode?: "split" | "workspace" | "chat";
 }
 
 // Helper to find a file by path in the tree
@@ -90,7 +92,8 @@ function buildFileTree(paths: { path: string }[]): FileNode[] {
 const getTabsKey = (projectId: string) => `${OPEN_TABS_KEY}_${projectId}`;
 const getActiveTabKey = (projectId: string) => `${ACTIVE_TAB_KEY}_${projectId}`;
 
-export function CodePanel({ projectId, updatedFiles, refreshToken }: CodePanelProps) {
+export function CodePanel({ projectId, updatedFiles, refreshToken, mobilePanelMode = "split" }: CodePanelProps) {
+  const isMobile = useIsMobile();
   const [files, setFiles] = useState<FileNode[]>([]);
   const [openTabs, setOpenTabs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<string | null>(null);
@@ -267,7 +270,8 @@ export function CodePanel({ projectId, updatedFiles, refreshToken }: CodePanelPr
   return (
     <div className="flex h-full">
       {/* File Tree */}
-      <div className="w-56 shrink-0 border-r border-border/50 overflow-y-auto bg-panel">
+      {(!isMobile || mobilePanelMode !== "chat") && (
+      <div className={`${isMobile ? (mobilePanelMode === "split" ? "w-28" : "w-full") : "w-56"} shrink-0 overflow-y-auto border-r border-border/50 bg-panel`}>
         <div className="panel-header">
           <span className="text-sm font-medium">Files</span>
         </div>
@@ -278,8 +282,10 @@ export function CodePanel({ projectId, updatedFiles, refreshToken }: CodePanelPr
           isLoading={isLoadingTree}
         />
       </div>
+      )}
 
       {/* Code Editor with Tabs */}
+      {(!isMobile || mobilePanelMode !== "workspace") && (
       <div className="flex-1 flex flex-col min-w-0">
         {/* File Tabs */}
         <FileTabs
@@ -298,6 +304,7 @@ export function CodePanel({ projectId, updatedFiles, refreshToken }: CodePanelPr
           />
         </div>
       </div>
+      )}
     </div>
   );
 }

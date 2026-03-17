@@ -238,14 +238,14 @@ export function ProjectsDashboard() {
             <div className="min-h-screen bg-background">
                 {/* Header */}
                 <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-8">
-                        <div className="flex items-center gap-2 font-bold text-lg">
+                    <div className="container flex min-h-14 max-w-screen-2xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:h-14 sm:flex-nowrap sm:px-8 sm:py-0">
+                        <div className="flex items-center gap-2 text-base font-bold sm:text-lg">
                             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
                                 <Folder className="w-5 h-5 text-primary" />
                             </div>
                             Codexa AI
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
                             <ThemeToggle />
                             <Popover open={isPlanPopoverOpen} onOpenChange={setIsPlanPopoverOpen}>
                                 <PopoverTrigger asChild>
@@ -381,10 +381,10 @@ export function ProjectsDashboard() {
                     </div>
                 </header>
 
-                <main className="container max-w-screen-2xl py-8 px-4 sm:px-8">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+                <main className="container max-w-screen-2xl px-4 py-6 sm:px-8 sm:py-8">
+                    <div className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
+                        <div className="space-y-1">
+                            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Projects</h1>
                             <p className="text-muted-foreground mt-1">
                                 Manage and create your AI-powered projects
                             </p>
@@ -448,11 +448,11 @@ export function ProjectsDashboard() {
                 </div>
 
                 {/* Search */}
-                <div className="relative mb-8 max-w-md">
+                <div className="relative mb-6 max-w-md sm:mb-8">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         placeholder="Search projects..."
-                        className="pl-9"
+                        className="h-11 pl-9"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -474,11 +474,11 @@ export function ProjectsDashboard() {
                         )}
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                         {filteredProjects.map((project) => (
                             <Card
                                 key={project.id}
-                                className="group cursor-pointer hover:shadow-lg transition-all hover:border-primary/50"
+                                className="group cursor-pointer overflow-hidden rounded-2xl border-border/60 transition-all hover:border-primary/50 hover:shadow-lg"
                                 onClick={() => navigate(`/projects/${project.id}`)}
                             >
                                 <CardHeader className="p-0">
@@ -494,7 +494,7 @@ export function ProjectsDashboard() {
                                         )}
                                     </div>
                                 </CardHeader>
-                                <CardContent className="p-4 flex flex-col gap-2">
+                                <CardContent className="flex flex-col gap-2 p-4 sm:p-5">
                                     <div className="flex justify-between items-start gap-2">
                                         <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-1">
                                             {project.name}

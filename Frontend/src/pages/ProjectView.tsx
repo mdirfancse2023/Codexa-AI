@@ -69,6 +69,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type ViewMode = "code" | "preview";
+type MobilePanelMode = "split" | "workspace" | "chat";
 
 export function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -79,6 +80,7 @@ export function ProjectView() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>("preview");
+  const [mobilePanelMode, setMobilePanelMode] = useState<MobilePanelMode>("split");
   const [updatedFiles, setUpdatedFiles] = useState<Map<string, string>>(new Map());
   const [filesRefreshToken, setFilesRefreshToken] = useState(0);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
@@ -546,7 +548,10 @@ Please analyze this error and fix the code to resolve it.`;
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
       <header className="shrink-0 border-b border-border/50 bg-panel px-3 py-2">
-        <div className="flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap">
+        <div className={cn(
+          "flex min-w-0 gap-3",
+          isMobile ? "flex-col" : "items-center overflow-x-auto whitespace-nowrap"
+        )}>
           <div className="flex min-w-0 items-center gap-2">
             {project ? (
               <>
@@ -559,7 +564,7 @@ Please analyze this error and fix the code to resolve it.`;
                     </div>
                   );
                 })()}
-                <span className="truncate font-semibold text-sm">{project.name}</span>
+                <span className={cn("truncate font-semibold text-sm", isMobile && "max-w-[92px]")}>{project.name}</span>
               </>
             ) : (
               <>
@@ -569,11 +574,10 @@ Please analyze this error and fix the code to resolve it.`;
                 <span className="font-semibold text-sm">Loading...</span>
               </>
             )}
-            <span className="ml-1 hidden text-muted-foreground text-xs sm:inline">Previewing last saved version</span>
             {project?.role !== 'VIEWER' && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-muted-foreground">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground">
                     <MoreVertical className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -593,37 +597,78 @@ Please analyze this error and fix the code to resolve it.`;
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
-          </div>
-
-          <div className="ml-3 grid min-w-[720px] flex-1 grid-cols-[auto_1fr_auto] items-center gap-4">
-            <div className="ml-36 flex items-center rounded-lg bg-muted/30 p-0.5">
+            {isMobile && (
+              <div className="ml-1 flex items-center rounded-lg bg-muted/30 p-0.5">
+                <button
+                  onClick={() => setMobilePanelMode("workspace")}
+                  className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all rounded-md ${mobilePanelMode === "workspace"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  |
+                </button>
+                <button
+                  onClick={() => setMobilePanelMode("split")}
+                  className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all rounded-md ${mobilePanelMode === "split"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  []
+                </button>
+                <button
+                  onClick={() => setMobilePanelMode("chat")}
+                  className={`flex items-center gap-1 px-2 py-1 text-[11px] font-medium transition-all rounded-md ${mobilePanelMode === "chat"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  |
+                </button>
+              </div>
+            )}
+            <div className={cn(
+              "flex items-center rounded-lg bg-muted/30 p-0.5",
+              isMobile ? "ml-auto" : "ml-[22rem]"
+            )}>
               <button
                 onClick={() => setViewMode("preview")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "preview"
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${isMobile ? "gap-1 px-1 py-0.5 text-[8px]" : ""} ${viewMode === "preview"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
                   }`}
               >
-                <Sparkles className="w-3 h-3" />
+                <Sparkles className={cn(isMobile ? "h-1.5 w-1.5" : "h-3 w-3")} />
                 Preview
               </button>
               <button
                 onClick={() => setViewMode("code")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "code"
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${isMobile ? "gap-1 px-1 py-0.5 text-[8px]" : ""} ${viewMode === "code"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
                   }`}
               >
-                <Code className="w-3 h-3" />
+                <Code className={cn(isMobile ? "h-1.5 w-1.5" : "h-3 w-3")} />
                 Code
               </button>
             </div>
+          </div>
 
-            <div className="flex items-center justify-center gap-2">
+          <div className={cn(
+            "flex-1",
+            isMobile
+              ? "grid grid-cols-1 gap-3"
+              : "ml-3 grid min-w-[560px] grid-cols-[1fr_auto] items-center gap-4"
+          )}>
+            <div className={cn(
+              "flex items-center gap-2",
+              isMobile ? "flex-nowrap justify-start whitespace-nowrap gap-1.5" : "justify-center"
+            )}>
               <ShareDialog
                 projectId={projectId}
                 trigger={
-                  <Button variant="outline" size="sm" className="h-8 text-xs font-medium" disabled={project?.role === 'VIEWER'}>
+                  <Button variant="outline" size="sm" className={cn("text-xs font-medium", isMobile ? "h-7 px-2 text-[11px]" : "h-8")} disabled={project?.role === 'VIEWER'}>
                     Share
                   </Button>
                 }
@@ -632,7 +677,7 @@ Please analyze this error and fix the code to resolve it.`;
                 <>
                   <Popover open={isUpgradePopoverOpen} onOpenChange={setIsUpgradePopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 text-xs">
+                      <Button variant="outline" size="sm" className={cn(isMobile ? "h-7 px-2 text-[11px]" : "h-8 text-xs")}>
                         Upgrade
                       </Button>
                     </PopoverTrigger>
@@ -706,18 +751,62 @@ Please analyze this error and fix the code to resolve it.`;
                   </Popover>
                   <Button
                     size="sm"
-                    className="h-8 text-xs bg-primary hover:bg-primary/90"
+                    className={cn("bg-primary hover:bg-primary/90", isMobile ? "h-7 px-2 text-[11px]" : "h-8 text-xs")}
                     onClick={handlePublish}
                     disabled={isPublishing}
                   >
-                    {isPublishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    {isPublishing ? <Loader2 className={cn("animate-spin", isMobile ? "h-3 w-3" : "h-3.5 w-3.5")} /> : null}
                     Publish
+                  </Button>
+                </>
+              )}
+              {isMobile && (
+                <>
+                  <ThemeToggle />
+                  <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/30 px-1.5 py-1">
+                    <Avatar className="h-5 w-5 border border-primary/20">
+                      <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-semibold">
+                        {userInfo?.name ? userInfo.name.charAt(0).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className={cn(
+                      "min-w-[50px] text-center text-[9px] font-semibold uppercase tracking-wider px-1 py-0.5 rounded",
+                      !project
+                        ? "bg-muted text-muted-foreground"
+                        : project.role === 'OWNER'
+                          ? "bg-primary/10 text-primary"
+                          : project.role === 'EDITOR'
+                            ? "bg-amber-500/10 text-amber-600"
+                            : "bg-muted text-muted-foreground"
+                    )}>
+                      {project?.role ?? "Loading"}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleGoToProjects}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    aria-label="Go to all projects"
+                  >
+                    <Home className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleLogout}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
                   </Button>
                 </>
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2">
+            <div className={cn(
+              "flex items-center gap-2",
+              isMobile ? "hidden" : "justify-end"
+            )}>
               <ThemeToggle />
               <div className="flex items-center gap-2 rounded-full border border-border/50 bg-muted/30 px-2 py-1">
                 <Avatar className="h-6 w-6 border border-primary/20">
@@ -763,33 +852,55 @@ Please analyze this error and fix the code to resolve it.`;
       {/* Main Content */}
       <div className="flex-1 overflow-hidden min-h-0">
         {isMobile ? (
-          <div className="flex h-full min-h-0 flex-col">
-            <section className="min-h-0 basis-[45%] border-b border-border/50 bg-panel">
-              <ChatPanel
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                isStreaming={isStreaming}
-                isLoading={isLoadingHistory}
-                readOnly={project?.role === 'VIEWER'}
-              />
-            </section>
-
-            <section className="min-h-0 flex-1">
-              <div className="relative h-full">
-                <div className={cn("absolute inset-0 h-full", viewMode !== "code" && "hidden")}>
-                  <CodePanel projectId={projectId} updatedFiles={updatedFiles} refreshToken={filesRefreshToken} />
-                </div>
-                <div className={cn("absolute inset-0 h-full", viewMode !== "preview" && "hidden")}>
-                  <PreviewPanel
-                    projectId={projectId}
-                    runtimeError={runtimeError}
-                    onDismiss={() => setRuntimeError(null)}
-                    onFix={handleFixError}
-                  />
-                </div>
+          viewMode === "code" ? (
+            <div className="flex h-full min-h-0 flex-col bg-background px-3 pb-3 pt-3">
+              <div className="h-full overflow-hidden rounded-2xl border border-border/50 bg-panel shadow-sm">
+                <CodePanel
+                  projectId={projectId}
+                  updatedFiles={updatedFiles}
+                  refreshToken={filesRefreshToken}
+                  mobilePanelMode={mobilePanelMode}
+                />
               </div>
-            </section>
-          </div>
+            </div>
+          ) : (
+            <div className="flex h-full min-h-0 flex-col">
+              {mobilePanelMode !== "chat" && (
+                <section className={cn(
+                  "bg-background px-3 pt-3",
+                  mobilePanelMode === "split" ? "min-h-0 basis-1/2 border-b border-border/50 pb-1" : "flex-1 pb-3"
+                )}>
+                  <div className="relative h-full overflow-hidden rounded-2xl border border-border/50 bg-panel shadow-sm">
+                    <div className={cn("absolute inset-0 h-full", viewMode !== "preview" && "hidden")}>
+                      <PreviewPanel
+                        projectId={projectId}
+                        runtimeError={runtimeError}
+                        onDismiss={() => setRuntimeError(null)}
+                        onFix={handleFixError}
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {mobilePanelMode !== "workspace" && (
+                <section className={cn(
+                  "bg-background px-3 pb-3",
+                  mobilePanelMode === "split" ? "min-h-0 basis-1/2 border-t border-border/30 pt-2" : "flex-1 pt-3"
+                )}>
+                  <div className="h-full overflow-hidden rounded-2xl border border-border/50 bg-panel shadow-sm">
+                    <ChatPanel
+                      messages={messages}
+                      onSendMessage={handleSendMessage}
+                      isStreaming={isStreaming}
+                      isLoading={isLoadingHistory}
+                      readOnly={project?.role === 'VIEWER'}
+                    />
+                  </div>
+                </section>
+              )}
+            </div>
+          )
         ) : (
           <ResizablePanelGroup direction="horizontal" className="h-full">
             {/* Chat Panel */}
