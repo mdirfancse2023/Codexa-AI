@@ -106,3 +106,30 @@ export interface AuthResponse {
     plan?: any;
   };
 }
+
+export interface PlanResponse {
+  id: number;
+  name: string;
+  stripePriceId?: string;
+  maxProjects: number;
+  maxTokensPerDay: number;
+  unlimitedAi?: boolean;
+  unlimtedAi?: boolean;
+  active?: boolean;
+  price?: string;
+}
+
+export interface SubscriptionResponse {
+  plan: PlanResponse;
+  status: string;
+  currentPeriodEnd?: string;
+  tokensUsedThisCycle?: number;
+}
+
+export interface CheckoutResponse {
+  checkoutUrl: string;
+}
+
+export interface PortalResponse {
+  portalUrl: string;
+}

@@ -1,4 +1,4 @@
-import { ChatMessage, DeployResponse, FileNode, LoginCredentials, LoginResponse, ProjectSummaryResponse, ProjectRequest, ProjectResponse, ProjectMember, ProjectRole, SignupRequest, AuthResponse } from "./types";
+import { ChatMessage, CheckoutResponse, DeployResponse, FileNode, LoginCredentials, LoginResponse, PortalResponse, ProjectSummaryResponse, ProjectRequest, ProjectResponse, ProjectMember, ProjectRole, SignupRequest, SubscriptionResponse, AuthResponse } from "./types";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://api.34.10.18.19.sslip.io";
 
@@ -13,6 +13,39 @@ export const isAuthenticated = () => !!getAuthToken();
 const getAuthHeaders = (): HeadersInit => {
   const token = getAuthToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const parseErrorResponse = async (response: Response, fallbackMessage: string) => {
+  const rawText = await response.text();
+  if (!rawText) return fallbackMessage;
+
+  try {
+    const parsed = JSON.parse(rawText) as { message?: string; error?: string; status?: string };
+    const backendMessage = parsed.message || parsed.error || rawText;
+
+    if (response.status === 401) {
+      return "Invalid email or password.";
+    }
+
+    if (response.status === 409) {
+      return "An account with these details already exists.";
+    }
+
+    if (response.status === 400) {
+      if (backendMessage.toLowerCase().includes("password")) {
+        return "Enter a valid password and try again.";
+      }
+      if (backendMessage.toLowerCase().includes("email") || backendMessage.toLowerCase().includes("username")) {
+        return "Enter a valid email address and try again.";
+      }
+      return "Please check your details and try again.";
+    }
+
+    return backendMessage;
+  } catch {
+    if (response.status === 401) return "Invalid email or password.";
+    return rawText || fallbackMessage;
+  }
 };
 
 // User info storage
@@ -31,6 +64,8 @@ export const removeUserInfo = () => localStorage.removeItem("user_info");
 export const PREVIEW_URL_KEY = "preview_url";
 export const OPEN_TABS_KEY = "open_tabs";
 export const ACTIVE_TAB_KEY = "active_tab";
+
+export const getPreviewUrlStorageKey = (projectId: string) => `${PREVIEW_URL_KEY}:${projectId}`;
 
 // API response format for files endpoint
 interface FilesApiResponse {
@@ -108,7 +143,7 @@ export const api = {
     });
 
     if (!response.ok) {
-      const error = await response.text();
+      const error = await parseErrorResponse(response, "Login failed");
       throw new Error(error || "Login failed");
     }
 
@@ -123,8 +158,55 @@ export const api = {
     });
 
     if (!response.ok) {
-      const error = await response.text();
+      const error = await parseErrorResponse(response, "Signup failed");
       throw new Error(error || "Signup failed");
+    }
+
+    return response.json();
+  },
+
+  async getCurrentSubscription(): Promise<SubscriptionResponse | null> {
+    try {
+      const response = await fetch(`${BASE_URL}/api/v1/account/subscription`, {
+        headers: { ...getAuthHeaders() },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to fetch subscription");
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error("Failed to fetch subscription:", error);
+      return null;
+    }
+  },
+
+  async createCheckoutSession(planId: number): Promise<CheckoutResponse> {
+    const response = await fetch(`${BASE_URL}/api/v1/account/payments/checkout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      body: JSON.stringify({ planId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || "Failed to create checkout session");
+    }
+
+    return response.json();
+  },
+
+  async openBillingPortal(): Promise<PortalResponse> {
+    const response = await fetch(`${BASE_URL}/api/v1/account/payments/portal`, {
+      method: "POST",
+      headers: { ...getAuthHeaders() },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || "Failed to open billing portal");
     }
 
     return response.json();
@@ -167,14 +249,19 @@ export const api = {
       }
     );
 
-    const data = await response.json();
-
     if (!response.ok) {
       console.error(`Error fetching file: ${response.status} ${response.statusText}`);
       throw new Error("Failed to fetch file content");
     }
 
-    return data.content;
+    const contentType = response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+      const data = await response.json();
+      return typeof data === "string" ? data : data.content;
+    }
+
+    return response.text();
   },
 
   async deploy(projectId: string): Promise<DeployResponse> {
@@ -276,7 +363,19 @@ export const api = {
       throw new Error("Failed to fetch project members");
     }
 
-    return response.json();
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.map((member) => ({
+      userId: member.userId,
+      username: member.username,
+      name: member.name,
+      role: member.role ?? member.projectRole,
+      invitedAt: member.invitedAt,
+    }));
   },
 
   async inviteMember(projectId: string, username: string, role: ProjectRole): Promise<void> {

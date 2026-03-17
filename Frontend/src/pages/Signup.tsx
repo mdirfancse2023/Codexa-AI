@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, Mail, Bot, User, Lock } from "lucide-react";
+import { Loader2, Mail, Bot, User, Lock, AlertCircle } from "lucide-react";
 import { api, setAuthToken, setUserInfo } from "@/lib/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Signup() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
     const navigate = useNavigate();
     const { toast } = useToast();
 
@@ -19,14 +22,11 @@ export default function Signup() {
         e.preventDefault();
 
         if (!name || !email || !password) {
-            toast({
-                title: "Missing details",
-                description: "Please fill in all fields",
-                variant: "destructive",
-            });
+            setFormError("Fill in your name, email, and password to create an account.");
             return;
         }
 
+        setFormError(null);
         setIsLoading(true);
 
         try {
@@ -37,13 +37,10 @@ export default function Signup() {
                 title: "Welcome!",
                 description: "Account created successfully",
             });
-            navigate("/projects");
+            navigate("/projects", { replace: true });
         } catch (error) {
-            toast({
-                title: "Signup failed",
-                description: error instanceof Error ? error.message : "Could not create account",
-                variant: "destructive",
-            });
+            const message = error instanceof Error ? error.message : "Could not create account";
+            setFormError(message || "Your details could not be verified. Please check them and try again.");
         } finally {
             setIsLoading(false);
         }
@@ -54,6 +51,9 @@ export default function Signup() {
             {/* Background gradient */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+            </div>
+            <div className="absolute right-4 top-4">
+                <ThemeToggle />
             </div>
 
             <div className="relative w-full max-w-md">
@@ -69,6 +69,13 @@ export default function Signup() {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-5">
+                        {formError && (
+                            <Alert className="border-destructive/30 bg-destructive/8 text-foreground">
+                                <AlertCircle className="h-4 w-4 text-destructive" />
+                                <AlertTitle>Unable to create account</AlertTitle>
+                                <AlertDescription>{formError}</AlertDescription>
+                            </Alert>
+                        )}
                         <div className="space-y-2">
                             <Label htmlFor="name" className="text-sm font-medium text-foreground">
                                 Full Name
@@ -80,7 +87,10 @@ export default function Signup() {
                                     type="text"
                                     placeholder="John Doe"
                                     value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => {
+                                        setName(e.target.value);
+                                        if (formError) setFormError(null);
+                                    }}
                                     className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
                                     disabled={isLoading}
                                 />
@@ -98,7 +108,10 @@ export default function Signup() {
                                     type="email"
                                     placeholder="you@example.com"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (formError) setFormError(null);
+                                    }}
                                     className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
                                     disabled={isLoading}
                                 />
@@ -116,7 +129,10 @@ export default function Signup() {
                                     type="password"
                                     placeholder="••••••••"
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (formError) setFormError(null);
+                                    }}
                                     className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
                                     disabled={isLoading}
                                 />

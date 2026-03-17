@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Play, Loader2, ExternalLink, RefreshCw, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api, PREVIEW_URL_KEY } from "@/lib/api";
+import { api, getPreviewUrlStorageKey } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 import { RuntimeErrorAlert, RuntimeError } from "@/components/RuntimeErrorAlert";
@@ -14,22 +14,30 @@ interface PreviewPanelProps {
 }
 
 export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: PreviewPanelProps) {
+  const previewStorageKey = getPreviewUrlStorageKey(projectId);
   const [previewUrl, setPreviewUrl] = useState<string | null>(() => {
-    // Load from localStorage on mount
-    return localStorage.getItem(PREVIEW_URL_KEY);
+    return localStorage.getItem(previewStorageKey);
   });
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setPreviewUrl(localStorage.getItem(previewStorageKey));
+  }, [previewStorageKey]);
 
   // Store previewUrl in localStorage when it changes
   useEffect(() => {
     if (previewUrl) {
-      localStorage.setItem(PREVIEW_URL_KEY, previewUrl);
+      localStorage.setItem(previewStorageKey, previewUrl);
+    } else {
+      localStorage.removeItem(previewStorageKey);
     }
-  }, [previewUrl]);
+  }, [previewStorageKey, previewUrl]);
 
   const handleDeploy = async () => {
     setIsDeploying(true);
+    setIsPreviewLoading(true);
 
     try {
       const response = await api.deploy(projectId);
@@ -44,6 +52,7 @@ export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: Prev
         description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
+      setIsPreviewLoading(false);
     } finally {
       setIsDeploying(false);
     }
@@ -114,12 +123,35 @@ export function PreviewPanel({ projectId, runtimeError, onDismiss, onFix }: Prev
       {/* Preview Area */}
       <div className="flex-1 bg-[#1a1a1a]">
         {previewUrl ? (
+          isPreviewLoading ? (
+            <div className="flex h-full flex-col items-center justify-center text-center p-8">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-muted/20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Preview will be ready shortly</p>
+              <p className="mt-2 max-w-sm text-xs text-muted-foreground">
+                Your project is starting up. This can take a few seconds while the preview server finishes preparing.
+              </p>
+            </div>
+          ) : (
           <iframe
             src={previewUrl}
             className="w-full h-full border-0"
             title="Preview"
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            onLoad={() => setIsPreviewLoading(false)}
           />
+          )
+        ) : isDeploying ? (
+          <div className="flex h-full flex-col items-center justify-center text-center p-8">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-muted/20">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+            <p className="text-sm font-medium text-foreground">Preview will be ready shortly</p>
+            <p className="mt-2 max-w-sm text-xs text-muted-foreground">
+              We are creating your preview environment and connecting it to this project.
+            </p>
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <div className="w-16 h-16 rounded-xl bg-muted/20 flex items-center justify-center mb-4">

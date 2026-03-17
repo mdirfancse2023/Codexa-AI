@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/lib/api";
 import { Bot, Loader2 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -10,14 +11,17 @@ const Index = () => {
     // Redirect based on auth status
     if (isAuthenticated()) {
       // If authenticated, redirect to projects dashboard
-      navigate("/projects");
+      navigate("/projects", { replace: true });
     } else {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/3 right-1/3 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-3xl" />

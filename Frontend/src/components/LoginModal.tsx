@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Loader2, Lock, Mail, Bot } from "lucide-react";
+import { Loader2, Lock, Mail, Bot, AlertCircle } from "lucide-react";
 import { api, setAuthToken, setUserInfo } from "@/lib/api";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function LoginModal() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -18,14 +21,11 @@ export function LoginModal() {
     e.preventDefault();
 
     if (!email || !password) {
-      toast({
-        title: "Missing credentials",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
+      setFormError("Enter both email and password to continue.");
       return;
     }
 
+    setFormError(null);
     setIsLoading(true);
 
     try {
@@ -38,13 +38,10 @@ export function LoginModal() {
         title: "Welcome back!",
         description: "Successfully logged in",
       });
-      navigate("/projects");
+      navigate("/projects", { replace: true });
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
-        variant: "destructive",
-      });
+      const message = error instanceof Error ? error.message : "Invalid credentials";
+      setFormError(message || "The email or password you entered is invalid.");
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +52,9 @@ export function LoginModal() {
       {/* Background gradient */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
+      </div>
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
       </div>
 
       <div className="relative w-full max-w-md">
@@ -70,6 +70,13 @@ export function LoginModal() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {formError && (
+              <Alert className="border-destructive/30 bg-destructive/8 text-foreground">
+                <AlertCircle className="h-4 w-4 text-destructive" />
+                <AlertTitle>Unable to sign in</AlertTitle>
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
@@ -81,7 +88,10 @@ export function LoginModal() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (formError) setFormError(null);
+                  }}
                   className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
                   disabled={isLoading}
                 />
@@ -99,7 +109,10 @@ export function LoginModal() {
                   type="password"
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (formError) setFormError(null);
+                  }}
                   className="pl-10 h-12 bg-muted/50 border-border/50 focus:border-primary rounded-xl text-sm"
                   disabled={isLoading}
                 />

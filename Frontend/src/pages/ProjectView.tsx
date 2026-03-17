@@ -1,12 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import {
   Code,
   Sparkles,
   LogOut,
-  RotateCcw,
-  Maximize2,
-  RefreshCw,
+  Loader2,
   MoreVertical,
   Trash,
   Download,
@@ -56,15 +54,19 @@ import { PreviewPanel } from "@/components/PreviewPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { api, isAuthenticated, removeAuthToken, getUserInfo, removeUserInfo } from "@/lib/api";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { api, getPreviewUrlStorageKey, isAuthenticated, removeAuthToken, getUserInfo, removeUserInfo } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 import { RuntimeErrorAlert, RuntimeError } from "@/components/RuntimeErrorAlert";
 import { generateGradient, getProjectIcon, cn } from "@/lib/utils";
-import { ProjectResponse } from "@/lib/types";
+import { PlanResponse, ProjectResponse, SubscriptionResponse } from "@/lib/types";
 import { ShareDialog } from "@/components/ShareDialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type ViewMode = "code" | "preview";
 
@@ -72,6 +74,7 @@ export function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -81,6 +84,11 @@ export function ProjectView() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [runtimeError, setRuntimeError] = useState<RuntimeError | null>(null);
   const [project, setProject] = useState<ProjectResponse | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionResponse | null>(null);
+  const [isUpgradePopoverOpen, setIsUpgradePopoverOpen] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const [checkoutPlanId, setCheckoutPlanId] = useState<number | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const iconComponents: Record<string, React.ElementType> = {
     "calculator": Calculator,
     "list-todo": ListTodo,
@@ -125,6 +133,7 @@ export function ProjectView() {
   // Rename state
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
   const [renameName, setRenameName] = useState("");
+  const userInfo = getUserInfo();
 
   // Track edited files for current streaming response
   const currentEditedFilesRef = useRef<string[]>([]);
@@ -138,12 +147,9 @@ export function ProjectView() {
     });
   };
 
-  // Check authentication
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate("/login");
-    }
-  }, [navigate]);
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Load chat history on mount
   useEffect(() => {
@@ -193,11 +199,100 @@ export function ProjectView() {
     loadData();
   }, [projectId, toast]);
 
+  useEffect(() => {
+    const loadSubscription = async () => {
+      const subscriptionData = await api.getCurrentSubscription();
+      setSubscription(subscriptionData);
+    };
+
+    loadSubscription();
+  }, []);
 
   const handleLogout = () => {
     removeAuthToken();
     removeUserInfo();
-    navigate("/login");
+    navigate("/login", { replace: true });
+  };
+
+  const handleGoToProjects = () => {
+    navigate("/projects", { replace: true });
+  };
+
+  const upgradePlans: PlanResponse[] = [
+    { id: 1, name: "Codexa Pro", maxProjects: 100, maxTokensPerDay: 1000000, unlimitedAi: true },
+    { id: 2, name: "Codexa Plus", maxProjects: 25, maxTokensPerDay: 200000, unlimitedAi: false },
+  ];
+
+  const currentPlan = subscription?.plan;
+  const currentPlanName = (currentPlan?.name || "FREE").toUpperCase();
+  const hasUnlimitedAi = (plan: PlanResponse) => Boolean(plan.unlimitedAi ?? plan.unlimtedAi);
+
+  const getPlanPriceLabel = (plan: PlanResponse) => {
+    if (plan.price) return plan.price;
+
+    const normalized = plan.name.toLowerCase();
+    if (normalized.includes("plus")) return "Upgrade plan";
+    if (normalized.includes("pro")) return "Premium plan";
+    return "Custom";
+  };
+
+  const handleOpenPortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      const response = await api.openBillingPortal();
+      window.open(response.portalUrl, "_blank", "noopener,noreferrer");
+      setIsUpgradePopoverOpen(false);
+    } catch (error) {
+      console.error("Failed to open billing portal:", error);
+      toast({
+        title: "Billing portal unavailable",
+        description: error instanceof Error ? error.message : "Could not open billing portal.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
+
+  const handleCheckout = async (plan: PlanResponse) => {
+    setCheckoutPlanId(plan.id);
+    try {
+      const response = await api.createCheckoutSession(plan.id);
+      window.location.href = response.checkoutUrl;
+    } catch (error) {
+      console.error("Failed to create checkout session:", error);
+      toast({
+        title: "Checkout failed",
+        description: error instanceof Error ? error.message : "Could not start checkout.",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckoutPlanId(null);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!projectId) return;
+
+    setIsPublishing(true);
+    try {
+      const response = await api.deploy(projectId);
+      localStorage.setItem(getPreviewUrlStorageKey(projectId), response.previewUrl);
+      window.open(response.previewUrl, "_blank", "noopener,noreferrer");
+      toast({
+        title: "Published successfully",
+        description: "Your project was published and opened in a new tab.",
+      });
+    } catch (error) {
+      console.error("Failed to publish project:", error);
+      toast({
+        title: "Publish failed",
+        description: error instanceof Error ? error.message : "Could not publish project.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleSendMessage = useCallback((content: string) => {
@@ -354,7 +449,23 @@ export function ProjectView() {
   }, []);
 
   const handleFixError = useCallback((error: RuntimeError) => {
-    const prompt = `I encountered a ${error.source || "runtime error"} in my application:
+    const isDefaultExportMismatch = error.message.includes("does not provide an export named 'default'");
+    const prompt = isDefaultExportMismatch
+      ? `I encountered an import/export mismatch in my application.
+
+Error Message: ${error.message}
+${error.filename ? `File: ${error.filename}` : ""}
+${error.lineno ? `Line: ${error.lineno}` : ""}
+
+Stack Trace:
+${error.stack || "No stack trace available"}
+
+Please inspect the file that imports the module and the referenced module itself. Fix the mismatch by doing exactly one of these:
+1. change the import to a named import if the module only exports named symbols, or
+2. add a default export if that is the intended API.
+
+Do not change unrelated code. Ensure the preview builds without this module export error.`
+      : `I encountered a ${error.source || "runtime error"} in my application:
     
 Error Message: ${error.message}
 ${error.filename ? `File: ${error.filename}` : ''}
@@ -434,145 +545,226 @@ Please analyze this error and fix the code to resolve it.`;
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="h-12 shrink-0 border-b border-border/50 bg-panel flex items-center justify-between px-3">
-        <div className="flex items-center gap-2">
-          {project ? (
-            <>
-              {(() => {
-                const iconKey = getProjectIcon(project.name);
-                const Icon = iconComponents[iconKey] || Folder;
-                return (
-                  <div className="w-7 h-7 rounded-sm shadow-sm bg-background/80 border border-border/60 flex items-center justify-center">
-                    <Icon className="w-4 h-4 text-foreground" />
-                  </div>
-                );
-              })()}
-              <span className="font-semibold text-sm">{project.name}</span>
-            </>
-          ) : (
-            <>
-              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-              </div>
-              <span className="font-semibold text-sm">Loading...</span>
-            </>
-          )}
-          <span className="text-muted-foreground text-xs ml-2">Previewing last saved version</span>
-          {project?.role !== 'VIEWER' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-muted-foreground">
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onClick={openRenameDialog}>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadProject}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={handleDeleteProject}>
-                  <Trash className="w-4 h-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1">
-          
-
-          {/* View Mode Toggle */}
-          <div className="flex items-center bg-muted/30 rounded-lg p-0.5 mx-2">
-            <button
-              onClick={() => setViewMode("preview")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "preview"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              <Sparkles className="w-3 h-3" />
-              Preview
-            </button>
-            <button
-              onClick={() => setViewMode("code")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "code"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              <Code className="w-3 h-3" />
-              Code
-            </button>
+      <header className="shrink-0 border-b border-border/50 bg-panel px-3 py-2">
+        <div className="flex min-w-0 items-center gap-3 overflow-x-auto whitespace-nowrap">
+          <div className="flex min-w-0 items-center gap-2">
+            {project ? (
+              <>
+                {(() => {
+                  const iconKey = getProjectIcon(project.name);
+                  const Icon = iconComponents[iconKey] || Folder;
+                  return (
+                    <div className="w-7 h-7 rounded-sm shadow-sm bg-background/80 border border-border/60 flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-foreground" />
+                    </div>
+                  );
+                })()}
+                <span className="truncate font-semibold text-sm">{project.name}</span>
+              </>
+            ) : (
+              <>
+                <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                </div>
+                <span className="font-semibold text-sm">Loading...</span>
+              </>
+            )}
+            <span className="ml-1 hidden text-muted-foreground text-xs sm:inline">Previewing last saved version</span>
+            {project?.role !== 'VIEWER' && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 ml-2 text-muted-foreground">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={openRenameDialog}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadProject}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={handleDeleteProject}>
+                    <Trash className="w-4 h-4 mr-2" />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {project && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-muted/30 rounded-full border border-border/50">
-              <Avatar className="h-6 w-6 border border-primary/20">
-                <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
-                  {(() => {
-                    const userInfo = getUserInfo();
-                    if (userInfo?.name) {
-                      return userInfo.name.charAt(0).toUpperCase();
-                    }
-                    return "U";
-                  })()}
-                </AvatarFallback>
-              </Avatar>
-              {project.role && (
-                <span className={cn(
-                  "text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded",
-                  project.role === 'OWNER' ? "bg-primary/10 text-primary" :
-                    project.role === 'EDITOR' ? "bg-amber-500/10 text-amber-600" :
-                      "bg-muted text-muted-foreground"
-                )}>
-                  {project.role}
-                </span>
+          <div className="ml-3 grid min-w-[720px] flex-1 grid-cols-[auto_1fr_auto] items-center gap-4">
+            <div className="ml-36 flex items-center rounded-lg bg-muted/30 p-0.5">
+              <button
+                onClick={() => setViewMode("preview")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "preview"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
+              >
+                <Sparkles className="w-3 h-3" />
+                Preview
+              </button>
+              <button
+                onClick={() => setViewMode("code")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all rounded-md ${viewMode === "code"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+                  }`}
+              >
+                <Code className="w-3 h-3" />
+                Code
+              </button>
+            </div>
+
+            <div className="flex items-center justify-center gap-2">
+              <ShareDialog
+                projectId={projectId}
+                trigger={
+                  <Button variant="outline" size="sm" className="h-8 text-xs font-medium" disabled={project?.role === 'VIEWER'}>
+                    Share
+                  </Button>
+                }
+              />
+              {project?.role !== 'VIEWER' && (
+                <>
+                  <Popover open={isUpgradePopoverOpen} onOpenChange={setIsUpgradePopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8 text-xs">
+                        Upgrade
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="center" side="bottom" className="w-[360px] p-3">
+                      <div className="mb-3">
+                        <div className="text-sm font-semibold">{currentPlanName}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {currentPlanName === "FREE"
+                            ? "Choose a paid plan to continue with more limits and features."
+                            : "Your current subscription details and billing actions."}
+                        </div>
+                      </div>
+                      {currentPlanName !== "FREE" && (
+                        <div className="rounded-xl border p-3">
+                          <div className="mb-2 flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-semibold">{currentPlanName}</h3>
+                                <Badge variant="secondary">Current</Badge>
+                              </div>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {subscription?.currentPeriodEnd
+                                  ? `Renews through ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
+                                  : "Active subscription"}
+                              </p>
+                            </div>
+                            <Crown className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="mb-3 space-y-1.5 text-xs text-muted-foreground">
+                            <div>{subscription?.plan?.maxProjects ?? "-"} projects</div>
+                            <div>{subscription?.plan?.maxTokensPerDay?.toLocaleString() ?? "-"} tokens per day</div>
+                          </div>
+                          <Button className="w-full gap-2" variant="outline" onClick={handleOpenPortal} disabled={isOpeningPortal}>
+                            {isOpeningPortal ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                            Manage Billing
+                          </Button>
+                        </div>
+                      )}
+                      {currentPlanName === "FREE" && (
+                        <div className="space-y-3">
+                          {upgradePlans.map((plan) => {
+                            const isPro = plan.name.toLowerCase().includes("pro");
+
+                            return (
+                              <div key={plan.id} className={cn("rounded-xl border p-3", isPro && "border-primary/50 bg-primary/5")}>
+                                <div className="mb-2 flex items-start justify-between gap-3">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h3 className="text-sm font-semibold">{plan.name.toUpperCase()}</h3>
+                                      {isPro ? <Badge variant="secondary">Popular</Badge> : null}
+                                    </div>
+                                    <p className="mt-1 text-xs text-muted-foreground">{getPlanPriceLabel(plan)}</p>
+                                  </div>
+                                  <Crown className={cn("h-4 w-4", isPro ? "text-primary" : "text-muted-foreground")} />
+                                </div>
+                                <div className="mb-3 space-y-1.5 text-xs text-muted-foreground">
+                                  <div>{plan.maxProjects} projects</div>
+                                  <div>{plan.maxTokensPerDay.toLocaleString()} tokens per day</div>
+                                  <div>{hasUnlimitedAi(plan) ? "Unlimited AI access" : "Expanded AI access"}</div>
+                                </div>
+                                <Button className="w-full gap-2" onClick={() => handleCheckout(plan)} disabled={checkoutPlanId === plan.id}>
+                                  {checkoutPlanId === plan.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                                  Choose {plan.name}
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </PopoverContent>
+                  </Popover>
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs bg-primary hover:bg-primary/90"
+                    onClick={handlePublish}
+                    disabled={isPublishing}
+                  >
+                    {isPublishing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                    Publish
+                  </Button>
+                </>
               )}
             </div>
-          )}
 
-          <ShareDialog
-            projectId={projectId}
-            trigger={
-              <Button variant="outline" size="sm" className="h-8 text-xs font-medium" disabled={project?.role === 'VIEWER'}>
-                Share
+            <div className="flex items-center justify-end gap-2">
+              <ThemeToggle />
+              <div className="flex items-center gap-2 rounded-full border border-border/50 bg-muted/30 px-2 py-1">
+                <Avatar className="h-6 w-6 border border-primary/20">
+                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-semibold">
+                    {userInfo?.name ? userInfo.name.charAt(0).toUpperCase() : "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <span className={cn(
+                  "min-w-[58px] text-center text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded",
+                  !project
+                    ? "bg-muted text-muted-foreground"
+                    : project.role === 'OWNER'
+                      ? "bg-primary/10 text-primary"
+                      : project.role === 'EDITOR'
+                        ? "bg-amber-500/10 text-amber-600"
+                        : "bg-muted text-muted-foreground"
+                )}>
+                  {project?.role ?? "Loading"}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleGoToProjects}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                aria-label="Go to all projects"
+              >
+                <Home className="w-4 h-4" />
               </Button>
-            }
-          />
-          {project?.role !== 'VIEWER' && (
-            <>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                Upgrade
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="w-4 h-4" />
               </Button>
-              <Button size="sm" className="h-8 text-xs bg-primary hover:bg-primary/90">
-                Publish
-              </Button>
-            </>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Chat Panel */}
-          <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
-            <div className="h-full border-r border-border/50 bg-panel">
+      <div className="flex-1 overflow-hidden min-h-0">
+        {isMobile ? (
+          <div className="flex h-full min-h-0 flex-col">
+            <section className="min-h-0 basis-[45%] border-b border-border/50 bg-panel">
               <ChatPanel
                 messages={messages}
                 onSendMessage={handleSendMessage}
@@ -580,19 +772,14 @@ Please analyze this error and fix the code to resolve it.`;
                 isLoading={isLoadingHistory}
                 readOnly={project?.role === 'VIEWER'}
               />
-            </div>
-          </ResizablePanel>
+            </section>
 
-          <ResizableHandle className="w-px bg-border/50 hover:bg-primary/50 transition-colors" />
-
-          {/* Code/Preview Panel */}
-          <ResizablePanel defaultSize={65} minSize={50} maxSize={75}>
-            <div className="h-full">
-              <div className="h-full relative">
-                <div className={cn("h-full absolute inset-0", viewMode !== "code" && "hidden")}>
+            <section className="min-h-0 flex-1">
+              <div className="relative h-full">
+                <div className={cn("absolute inset-0 h-full", viewMode !== "code" && "hidden")}>
                   <CodePanel projectId={projectId} updatedFiles={updatedFiles} refreshToken={filesRefreshToken} />
                 </div>
-                <div className={cn("h-full absolute inset-0", viewMode !== "preview" && "hidden")}>
+                <div className={cn("absolute inset-0 h-full", viewMode !== "preview" && "hidden")}>
                   <PreviewPanel
                     projectId={projectId}
                     runtimeError={runtimeError}
@@ -601,9 +788,45 @@ Please analyze this error and fix the code to resolve it.`;
                   />
                 </div>
               </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+            </section>
+          </div>
+        ) : (
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            {/* Chat Panel */}
+            <ResizablePanel defaultSize={35} minSize={25} maxSize={50}>
+              <div className="h-full border-r border-border/50 bg-panel">
+                <ChatPanel
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  isStreaming={isStreaming}
+                  isLoading={isLoadingHistory}
+                  readOnly={project?.role === 'VIEWER'}
+                />
+              </div>
+            </ResizablePanel>
+
+            <ResizableHandle className="bg-border/50 hover:bg-primary/50 transition-colors" />
+
+            {/* Code/Preview Panel */}
+            <ResizablePanel defaultSize={65} minSize={50} maxSize={75}>
+              <div className="h-full">
+                <div className="h-full relative">
+                  <div className={cn("h-full absolute inset-0", viewMode !== "code" && "hidden")}>
+                    <CodePanel projectId={projectId} updatedFiles={updatedFiles} refreshToken={filesRefreshToken} />
+                  </div>
+                  <div className={cn("h-full absolute inset-0", viewMode !== "preview" && "hidden")}>
+                    <PreviewPanel
+                      projectId={projectId}
+                      runtimeError={runtimeError}
+                      onDismiss={() => setRuntimeError(null)}
+                      onFix={handleFixError}
+                    />
+                  </div>
+                </div>
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
       </div>
 
       {/* Rename Dialog */}
@@ -627,6 +850,7 @@ Please analyze this error and fix the code to resolve it.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div >
   );
 }
