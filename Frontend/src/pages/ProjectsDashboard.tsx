@@ -238,14 +238,14 @@ export function ProjectsDashboard() {
             <div className="min-h-screen bg-background">
                 {/* Header */}
                 <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="container flex min-h-14 max-w-screen-2xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:h-14 sm:flex-nowrap sm:px-8 sm:py-0">
-                        <div className="flex items-center gap-2 text-base font-bold sm:text-lg">
-                            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                                <Folder className="w-5 h-5 text-primary" />
+                    <div className="container flex min-h-14 max-w-screen-2xl items-center justify-between gap-2 px-4 py-3 sm:h-14 sm:px-8 sm:py-0">
+                        <div className="flex min-w-0 items-center gap-2 text-sm font-bold sm:text-lg">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+                                <Folder className="h-[18px] w-[18px] text-primary sm:h-5 sm:w-5" />
                             </div>
-                            Codexa AI
+                            <span className="truncate whitespace-nowrap">Codexa AI</span>
                         </div>
-                        <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
+                        <div className="flex shrink-0 items-center justify-end gap-1.5 sm:gap-2">
                             <ThemeToggle />
                             <Popover open={isPlanPopoverOpen} onOpenChange={setIsPlanPopoverOpen}>
                                 <PopoverTrigger asChild>
