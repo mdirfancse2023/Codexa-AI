@@ -238,21 +238,21 @@ export function ProjectsDashboard() {
             <div className="min-h-screen bg-background">
                 {/* Header */}
                 <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                    <div className="container flex min-h-14 w-full max-w-screen-2xl items-center gap-2 px-3 py-3 sm:justify-between sm:gap-3 sm:px-8 sm:py-0">
-                        <div className="flex min-w-0 shrink items-center gap-2 text-sm font-bold sm:gap-2 sm:text-lg">
+                    <div className="container grid min-h-14 w-full max-w-screen-2xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-3 py-3 sm:gap-3 sm:px-8 sm:py-0">
+                        <div className="flex min-w-0 items-center gap-2 text-sm font-bold sm:gap-2 sm:text-lg">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/20 sm:h-8 sm:w-8">
                                 <Folder className="h-[18px] w-[18px] text-primary sm:h-5 sm:w-5" />
                             </div>
                             <span className="truncate whitespace-nowrap leading-none">Codexa AI</span>
                         </div>
-                        <div className="flex shrink-0 items-center gap-1.5 sm:ml-auto sm:gap-2">
+                        <div className="flex min-w-0 flex-nowrap items-center justify-end gap-1 sm:gap-2">
                             <ThemeToggle />
                             <Popover open={isPlanPopoverOpen} onOpenChange={setIsPlanPopoverOpen}>
                                 <PopoverTrigger asChild>
                                     <button
                                         type="button"
                                         disabled={isOpeningPortal}
-                                        className="inline-flex h-8 items-center rounded-md border border-primary bg-primary px-2 text-xs font-bold uppercase tracking-normal text-primary-foreground shadow-sm disabled:opacity-70 sm:h-8 sm:px-2.5 sm:text-[11px] sm:tracking-[0.12em]"
+                                        className="inline-flex h-8 max-w-[92px] items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-md border border-primary bg-primary px-2 text-xs font-bold uppercase tracking-normal text-primary-foreground shadow-sm disabled:opacity-70 sm:h-8 sm:max-w-none sm:px-2.5 sm:text-[11px] sm:tracking-[0.12em]"
                                     >
                                         {isOpeningPortal ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : currentPlanName}
                                     </button>

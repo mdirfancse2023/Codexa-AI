@@ -47,7 +47,7 @@ export default function Signup() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="relative isolate flex min-h-[100svh] items-start justify-center bg-background px-4 pb-6 pt-6 sm:items-center sm:py-8">
             {/* Background gradient */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
@@ -56,7 +56,7 @@ export default function Signup() {
                 <ThemeToggle />
             </div>
 
-            <div className="relative w-full max-w-md">
+            <div className="relative z-10 w-full max-w-md">
                 {/* Card */}
                 <div className="bg-card border border-border/50 rounded-2xl p-8 shadow-2xl">
                     {/* Logo */}
