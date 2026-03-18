@@ -37,7 +37,7 @@ export const ChatEventRenderer = ({ event, isLoading }: { event: ChatEvent, isLo
 
     case ChatEventType.MESSAGE:
       return (
-        <div className="prose prose-sm max-w-none leading-relaxed mb-4 text-foreground dark:prose-invert">
+        <div className="chat-markdown prose prose-sm mb-4 max-w-none overflow-x-hidden break-words leading-relaxed text-foreground dark:prose-invert">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {event.content}
           </ReactMarkdown>
@@ -76,21 +76,21 @@ const CollapsibleEvent = ({
   const showButton = !hideToggle && hasMultipleFiles && !forceSingleLine;
 
   return (
-    <div className="flex flex-col gap-2 my-2">
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center gap-3">
+    <div className="my-2 flex min-w-0 flex-col gap-2 overflow-x-hidden">
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3 overflow-hidden">
           <div className="shrink-0 text-muted-foreground">{icon}</div>
-          <div className="flex items-center gap-2 overflow-hidden">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             <span className="shrink-0 text-[13px] font-medium text-muted-foreground">{label}</span>
             
             {/* File Name Badge */}
-            <span className="truncate rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[12px] text-foreground">
+            <span className="min-w-0 truncate rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[12px] text-foreground">
               {files[0].split('/').pop()}
             </span>
 
             {/* +X more logic */}
             {!isExpanded && hasMultipleFiles && (
-              <span className="whitespace-nowrap text-[11px] text-muted-foreground">
+              <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">
                 +{files.length - 1} more
               </span>
             )}
@@ -109,12 +109,12 @@ const CollapsibleEvent = ({
 
       {/* List expansion logic */}
       {isExpanded && hasMultipleFiles && !forceSingleLine && (
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2 overflow-hidden">
           {files.slice(1).map((file, idx) => (
-            <div key={idx} className="flex items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div key={idx} className="flex min-w-0 items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
                <div className="shrink-0 opacity-0 text-muted-foreground">{icon}</div>
                <span className="w-8 shrink-0 text-[13px] font-medium text-muted-foreground">{label}</span>
-               <span className="truncate rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[12px] text-foreground">
+               <span className="min-w-0 truncate rounded-md border border-border bg-card px-2 py-0.5 font-mono text-[12px] text-foreground">
                  {file.split('/').pop()}
                </span>
             </div>

@@ -65,9 +65,9 @@ export function ChatPanel({ messages, onSendMessage, isStreaming, isLoading, rea
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex h-full min-w-0 flex-col overflow-x-hidden bg-background">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -83,7 +83,7 @@ export function ChatPanel({ messages, onSendMessage, isStreaming, isLoading, rea
             </p>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex min-w-0 flex-col overflow-x-hidden">
             {messages.map((message) => (
               <MessageItem key={message.id} message={message}
                 isStreaming={isStreaming && message.isStreaming} />
@@ -154,12 +154,12 @@ function MessageItem({ message, isStreaming }: { message: ChatMessage, isStreami
     : [];
 
   return (
-    <div className={`p-5 border-b border-border/10 ${message.role === 'user' ? 'bg-muted/10' : 'bg-background'}`}>
-      <div className="max-w-4xl mx-auto">
+    <div className={`overflow-x-hidden border-b border-border/10 p-5 ${message.role === 'user' ? 'bg-muted/10' : 'bg-background'}`}>
+      <div className="mx-auto min-w-0 max-w-4xl">
         {message.role === "user" ? (
           <div className="flex flex-col items-end gap-2">
-            <div className="bg-primary/10 text-primary-foreground text-sm py-2.5 px-4 rounded-2xl rounded-tr-none border border-primary/20 max-w-[85%]">
-              <p className="text-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
+            <div className="max-w-[85%] min-w-0 rounded-2xl rounded-tr-none border border-primary/20 bg-primary/10 px-4 py-2.5 text-sm text-primary-foreground">
+              <p className="break-words text-foreground leading-relaxed whitespace-pre-wrap">{message.content}</p>
             </div>
             {message.createdAt && (
               <span className="text-[10px] text-muted-foreground px-1 uppercase tracking-tight">
@@ -168,9 +168,9 @@ function MessageItem({ message, isStreaming }: { message: ChatMessage, isStreami
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="min-w-0 space-y-4 overflow-x-hidden">
             {/* Render granular events (Thought, Tool, Message, File) */}
-            <div className="flex flex-col gap-3">
+            <div className="flex min-w-0 flex-col gap-3 overflow-x-hidden">
               {[...(shouldShowThought ? [{ type: ChatEventType.THOUGHT, content: "Thinking..." }] : []), ...eventsToRender].map((event, idx, arr) => {
                 const isLast = idx === arr.length - 1;
                 return (

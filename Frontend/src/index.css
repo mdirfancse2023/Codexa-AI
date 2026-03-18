@@ -188,6 +188,26 @@
     @apply h-12 flex items-center justify-between px-4 border-b border-border/50 bg-panel;
   }
 
+  .chat-markdown {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .chat-markdown pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .chat-markdown code {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .chat-markdown pre code {
+    white-space: pre;
+    word-break: normal;
+  }
+
   .tab-button {
     @apply px-4 py-2 text-sm font-medium transition-all rounded-md;
     @apply text-muted-foreground hover:text-foreground hover:bg-panel-hover;
