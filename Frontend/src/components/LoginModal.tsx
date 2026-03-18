@@ -53,13 +53,12 @@ export function LoginModal() {
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
       </div>
-      <div className="absolute right-4 top-4">
-        <ThemeToggle />
-      </div>
-
       <div className="relative z-10 w-full max-w-md">
         {/* Card */}
         <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-2xl sm:p-8">
+          <div className="mb-3 flex justify-end sm:mb-4">
+            <ThemeToggle />
+          </div>
           {/* Logo */}
           <div className="text-center mb-5 sm:mb-8">
             <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-primary/20 mb-3 sm:mb-5 sm:h-14 sm:w-14">
