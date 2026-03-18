@@ -378,7 +378,7 @@ export const api = {
     }));
   },
 
-  async inviteMember(projectId: string, username: string, role: ProjectRole): Promise<void> {
+  async inviteMember(projectId: string, username: string, role: ProjectRole): Promise<ProjectMember | null> {
     const response = await fetch(`${BASE_URL}/api/v1/workspace/projects/${projectId}/members`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
@@ -389,6 +389,20 @@ export const api = {
       const error = await response.text();
       throw new Error(error || "Failed to invite member");
     }
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
+      return null;
+    }
+
+    const member = await response.json();
+    return {
+      userId: member.userId,
+      username: member.username,
+      name: member.name,
+      role: member.role ?? member.projectRole ?? role,
+      invitedAt: member.invitedAt,
+    };
   },
 
   async updateMemberRole(projectId: string, userId: number, role: ProjectRole): Promise<void> {

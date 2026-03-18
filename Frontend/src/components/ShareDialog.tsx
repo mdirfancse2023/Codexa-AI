@@ -24,15 +24,86 @@ export function ShareDialog({ projectId, trigger, open, onOpenChange }: ShareDia
     const [loading, setLoading] = useState(false);
     const [internalOpen, setInternalOpen] = useState(false);
 
+    const memberCacheKey = `share-member-cache:${projectId}`;
+
+    const readMemberCache = (): Record<string, { username?: string; name?: string }> => {
+        try {
+            const rawCache = localStorage.getItem(memberCacheKey);
+            return rawCache ? JSON.parse(rawCache) : {};
+        } catch {
+            return {};
+        }
+    };
+
+    const writeMemberCache = (entries: Record<string, { username?: string; name?: string }>) => {
+        try {
+            localStorage.setItem(memberCacheKey, JSON.stringify(entries));
+        } catch {
+            // Ignore local cache write failures.
+        }
+    };
+
+    const mergeMemberCache = (incomingMembers: ProjectMember[]) => {
+        const cache = readMemberCache();
+
+        return incomingMembers.map((member) => {
+            const cachedMember = cache[String(member.userId)] || {};
+
+            return {
+                ...member,
+                username: member.username?.trim() || cachedMember.username || "",
+                name: member.name?.trim() || cachedMember.name || "",
+            };
+        });
+    };
+
+    const cacheMembers = (incomingMembers: ProjectMember[]) => {
+        const nextCache = { ...readMemberCache() };
+
+        incomingMembers.forEach((member) => {
+            const username = member.username?.trim();
+            const name = member.name?.trim();
+
+            if (username || name) {
+                nextCache[String(member.userId)] = {
+                    username: username || nextCache[String(member.userId)]?.username || "",
+                    name: name || nextCache[String(member.userId)]?.name || "",
+                };
+            }
+        });
+
+        writeMemberCache(nextCache);
+    };
+
     const getMemberLabel = (member: ProjectMember) => {
         const fallbackUsername = typeof member.username === "string" ? member.username.trim() : "";
         const fallbackName = typeof member.name === "string" ? member.name.trim() : "";
+        const fallbackRole = member.role ?? "VIEWER";
+
+        const roleFallbacks: Record<ProjectRole, { displayName: string; secondaryText: string; initials: string }> = {
+            OWNER: {
+                displayName: "Project owner",
+                secondaryText: "Owner account",
+                initials: "OW",
+            },
+            EDITOR: {
+                displayName: "Project editor",
+                secondaryText: "Editor access",
+                initials: "ED",
+            },
+            VIEWER: {
+                displayName: "Project viewer",
+                secondaryText: "Viewer access",
+                initials: "VW",
+            },
+        };
+        const roleFallback = roleFallbacks[fallbackRole];
 
         return {
-            displayName: fallbackName || fallbackUsername || "Unknown member",
-            secondaryText: fallbackUsername || "No username available",
-            initials: (fallbackName || fallbackUsername || "U").slice(0, 2).toUpperCase(),
-            role: member.role ?? "VIEWER",
+            displayName: fallbackName || fallbackUsername || roleFallback.displayName,
+            secondaryText: fallbackUsername || roleFallback.secondaryText,
+            initials: (fallbackName || fallbackUsername || roleFallback.initials).slice(0, 2).toUpperCase(),
+            role: fallbackRole,
         };
     };
 
@@ -104,7 +175,9 @@ export function ShareDialog({ projectId, trigger, open, onOpenChange }: ShareDia
     const loadMembers = async () => {
         try {
             const data = await api.getProjectMembers(projectId);
-            setMembers(Array.isArray(data) ? data : []);
+            const mergedMembers = mergeMemberCache(Array.isArray(data) ? data : []);
+            cacheMembers(mergedMembers);
+            setMembers(mergedMembers);
         } catch (error) {
             // Fail silently or show placeholder if valid "mock" experience is needed
             console.error("Failed to load members", error);
@@ -116,7 +189,19 @@ export function ShareDialog({ projectId, trigger, open, onOpenChange }: ShareDia
         if (!inviteEmail.trim()) return;
         setLoading(true);
         try {
-            await api.inviteMember(projectId, inviteEmail, inviteRole);
+            const invitedMember = await api.inviteMember(projectId, inviteEmail, inviteRole);
+            if (invitedMember?.userId) {
+                const mergedInvitedMember = mergeMemberCache([{
+                    ...invitedMember,
+                    username: invitedMember.username?.trim() || inviteEmail.trim(),
+                }])[0];
+
+                cacheMembers([mergedInvitedMember]);
+                setMembers((currentMembers) => {
+                    const withoutExisting = currentMembers.filter((member) => member.userId !== mergedInvitedMember.userId);
+                    return [...withoutExisting, mergedInvitedMember];
+                });
+            }
             toast({ title: "Invite sent", description: `Invited ${inviteEmail} to the project.` });
             setInviteEmail("");
             loadMembers();
