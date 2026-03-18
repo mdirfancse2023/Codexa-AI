@@ -48,7 +48,7 @@ export function LoginModal() {
   };
 
   return (
-    <div className="relative isolate flex min-h-[100svh] items-start justify-center bg-background px-4 pb-6 pt-6 sm:items-center sm:py-8">
+    <div className="relative isolate flex min-h-[100svh] items-start justify-center bg-background px-4 pb-6 pt-2 sm:items-center sm:py-8">
       {/* Background gradient */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
@@ -59,11 +59,11 @@ export function LoginModal() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Card */}
-        <div className="bg-card border border-border/50 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-2xl sm:p-8">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-primary/20 mb-5">
-              <Bot className="w-7 h-7 text-primary" />
+          <div className="text-center mb-5 sm:mb-8">
+            <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-primary/20 mb-3 sm:mb-5 sm:h-14 sm:w-14">
+              <Bot className="h-6 w-6 text-primary sm:h-7 sm:w-7" />
             </div>
             <h1 className="text-2xl font-semibold text-foreground mb-2">Welcome to Codexa AI</h1>
             <p className="text-muted-foreground text-sm">Sign in to continue building</p>
