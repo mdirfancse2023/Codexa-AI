@@ -47,15 +47,15 @@ export default function Signup() {
     };
 
     return (
-        <div className="relative isolate flex min-h-[100svh] items-start justify-center bg-background px-4 pb-6 pt-2 sm:items-center sm:py-8">
+        <div className="relative isolate flex min-h-[100svh] items-start justify-center bg-background px-4 pb-6 pt-[max(env(safe-area-inset-top),0.5rem)] sm:items-center sm:py-8">
             {/* Background gradient */}
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
             </div>
             <div className="relative z-10 w-full max-w-md">
                 {/* Card */}
-                <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-2xl sm:p-8">
-                    <div className="mb-3 flex justify-end sm:mb-4">
+                <div className="relative bg-card border border-border/50 rounded-2xl p-5 pt-12 shadow-2xl sm:p-8 sm:pt-8">
+                    <div className="absolute right-3 top-3 sm:right-4 sm:top-4">
                         <ThemeToggle />
                     </div>
                     {/* Logo */}
